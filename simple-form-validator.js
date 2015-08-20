@@ -6,12 +6,14 @@
 var AB = (window.AB || {});
  
 /**
- * Contains all of the functionality and methods for super simple form validation.
+ * Contains all of the functionality and methods for form validation.
  *
  * @author Aleks Blagojevich
  * @version  1.0
  * @namespace validate
  * @memberof AB
+ * 
+ * @returns {object} AB.validate - Public methods
  * 
  */
 AB.validate = (function () {
@@ -19,27 +21,71 @@ AB.validate = (function () {
 	var errorClass = 'error',
 		tests = {};
 	
+	/**
+	 * Test the value of the email form field to verify that it is a valid email address.
+	 * 
+	 * @memberOf AB.validate
+	 * @param  {string} value Email address from the form field.
+	 * @param  {boolean} validate Should we validate the email format?
+	 * @return {boolean} Is the email being provided a valid email address?
+	 * 
+	 */
 	tests.email = function(value, validate) {
 		var regx = /^(?:\w+\.?\+?)*\w+@(?:\w+\.)+\w+$/;
 		if (validate) {
 			return regx.test(value.trim());	
 		}
 	};
-		
+	
+	/**
+	 * Test the value of the provided string to verify that it contains the minimum number of characters.
+	 * 
+	 * @memberOf AB.validate
+	 * @param  {string} value The string to test
+	 * @param  {number} length The minimum string length
+	 * @return {boolean} Does the string have at least the minimum number of characters?
+	 * 
+	 */
 	tests.minLength = function(value, length) {
 		return value.length >= length;
 	};
-		
+	
+	/**
+	 * Test the value of the provided string to verify that it does not contain more characters than are allowed.
+	 * 
+	 * @memberOf AB.validate
+	 * @param  {string} value The string to test
+	 * @param  {number} length The maximum string length
+	 * @return {boolean} Does the string have less than the maximum number of characters?
+	 * 
+	 */
 	tests.maxLength = function(value, length) {
 		return value.length <= length;
 	};
-		
+	
+	/**
+	 * Test the value of the provided items to test if they match or are equal.
+	 * 
+	 * @memberOf AB.validate
+	 * @param  {string|number|node|object} first The first item to compare
+	 * @param  {string|number|node|object} second The second item to compare
+	 * @return {boolean} Do the two values match?
+	 * 
+	 */
 	tests.equals = function(first, second) {
 		return (first == second);
 	};
-		
-	// matches mm/dd/yyyy (requires leading 0's (which may be a bit silly, what do you think?)
-	// TODO: Validae different date formats
+	
+	/**
+	 * Test the value of the provided date to make sure that it is in the correct format: MM/DD/YYYY
+	 * 
+	 * @memberOf AB.validate
+	 * @param  {string} date The date to validate
+	 * @param  {boolean} validate Should we validate the date?
+	 * @return {boolean} Is the date provided in the correct format?
+	 * 
+	 */
+	// TODO: Validate different date formats
 	tests.date = function (date, validate) {
 		var regx = /^(?:0[1-9]|1[0-2])\/(?:0[1-9]|[12][0-9]|3[01])\/(?:\d{4})/;
 		
@@ -47,7 +93,16 @@ AB.validate = (function () {
 			return regx.test(val);
 		}
 	};
-		
+	
+	/**
+	 * Test the value to determine whether or not the string contains at least one number.
+	 * 
+	 * @memberOf AB.validate
+	 * @param  {string} value The string to validate
+	 * @param  {boolean} validate Should we validate the string?
+	 * @return {boolean} Does the string contain at least one number?
+	 * 
+	 */
 	tests.requireNumbers = function(value, validate) {
 		var regx = /^(?=.*\d).+$/;
 		
@@ -55,7 +110,16 @@ AB.validate = (function () {
 			return regx.test(value);
 		}
 	};
-		
+	
+	/**
+	 * Test the value to determine whether or not the string contains at least one uppercase letter.
+	 * 
+	 * @memberOf AB.validate
+	 * @param  {string} value The string to validate
+	 * @param  {boolean} validate Should we validate the string?
+	 * @return {boolean} Does the string contain at least one uppercase letter?
+	 * 
+	 */
 	tests.requireUppercase = function(value, validate) {
 		var regx = /^(?=.*[A-Z]).+$/;
 		
@@ -63,7 +127,16 @@ AB.validate = (function () {
 			return regx.test(value);
 		}
 	};
-		
+	
+	/**
+	 * Test the value to determine whether or not the string contains at least one lowercase letter.
+	 * 
+	 * @memberOf AB.validate
+	 * @param  {string} value The string to validate
+	 * @param  {boolean} validate Should we validate the string?
+	 * @return {boolean} Does the string contain at least one lowercase letter?
+	 * 
+	 */
 	tests.requireLowercase = function(value, validate) {
 		var regx = /^(?=.*[a-z]).+$/;
 		
@@ -71,7 +144,16 @@ AB.validate = (function () {
 			return regx.test(value);
 		}
 	};
-		
+	
+	/**
+	 * Test the value to determine whether or not the string contains at least one special character.
+	 * 
+	 * @memberOf AB.validate
+	 * @param  {string} value The string to validate
+	 * @param  {boolean} validate Should we validate the string?
+	 * @return {boolean} Does the string contain at least one special character?
+	 * 
+	 */
 	tests.requireSymbols = function(value, validate) {
 		var regx = /^(?=.*[-+_!@#$%^&*.,?]).+$/;
 		
@@ -80,6 +162,14 @@ AB.validate = (function () {
 		}
 	};
 	
+	/**
+	 * Method to show error messages next to the form fields which did not pass validation.
+	 * 
+	 * @memberOf AB.validate
+	 * @param  {string} formSelector The css selector of the form to be validated
+	 * @param  {object} errors List of key value pairs where the form field is associated with an error message.
+	 * 
+	 */
 	function showErrorMessages(formSelector, errors) {
 		
 		var form = document.querySelector(formSelector),
@@ -114,7 +204,14 @@ AB.validate = (function () {
 		}
 	}
 	
-	function removeErrorMessages(formSelector, errors) {
+	/**
+	 * Method to remove error messages if a form field passes validation.
+	 * 
+	 * @memberOf AB.validate
+	 * @param  {string} formSelector The css selector of the form to be validated
+	 * 
+	 */
+	function removeErrorMessages(formSelector) {
 		
 		var form = document.querySelector(formSelector),
 			elements = form.elements;
@@ -133,6 +230,61 @@ AB.validate = (function () {
 		
 	}
 	
+	/**
+	 * Method to show error messages next to the form fields which did not pass validation.
+	 * 
+	 * @memberOf AB.validate
+	 * @param  {string} formSelector The css selector of the form to be validated.
+	 * @param  {object} options Configuration object to select which form fields need validation.
+	 * @returns {boolean} Did any of the form fields pass validation?
+	 * 
+	 * @example
+	 * AB.validate('.js-registration-form', {
+	 *    fields : {
+	 *        // Use the "name" of the form field to select a specific field for validation.
+	 *     	  'user-name' : {
+	 *            rules : {
+	 *                maxLength : 20,
+	 *                minLength : 1
+ 	 *            },
+	 *            // A generic message ican be displayed when any of the validation tests fail.
+	 *            message : 'Please enter a valid username.'
+	 *        },
+	 *        'user-email' : {
+	 *            rules : {
+	 *                email : true
+	 *            },
+	 *            message : 'Please enter a valid email address.'
+	 *        },
+	 *        'user-password' : {
+	 *            rules : {
+	 *                minLength : 7,
+	 *                maxLength : 20,
+	 *                requireSymbols : true,
+	 *                requireNumbers : true,
+	 *                requireUppercase : true,
+	 *                requireLowercase : true
+	 *            },
+	 *            // Specific messages can be displayed depending on which of the validation tests fail.
+	 *            messages : {
+	 *                minLength : 'Password must be at least 7 characters long.',
+	 *                maxLength : 'Password cannot be longer than 20 characters.',
+	 *                requireSymbols : 'Password must contain at least one symbol.',
+	 *                requireNumbers : 'Password must contain at least one number.',
+	 *                requireUppercase : 'Password must contain at least one uppercase letter.',
+	 *                requireLowercase : 'Password must contain at least one lowercase letter.'
+	 *            }
+	 *        },
+	 *        'user-confirm' : {
+	 *            rules : {
+	 *                equals : document.querySelector('.Registration-password').value
+	 *            },
+	 *            message : 'Passwords must match.'
+	 *        }
+	 *    }
+	 * });
+	 * 
+	 */
 	function validateForm(formSelector, options) {
 		
 		var i,
