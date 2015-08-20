@@ -1,4 +1,11 @@
 /**
+ * @namespace AB
+ * @author Aleks Blagojevich
+ * 
+ */
+var AB = (window.AB || {});
+ 
+/**
  * Contains all of the functionality and methods for super simple form validation.
  *
  * @author Aleks Blagojevich
