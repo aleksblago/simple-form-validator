@@ -19,7 +19,12 @@ var AB = (window.AB || {});
 AB.validate = (function () {
 	
 	var errorClass = 'error',
-		tests = {};
+		tests = {},
+		options = {
+			fieldErrorClass : errorClass,
+			messageErrorClass : errorClass,
+			fields : {}
+		};
 	
 	/**
 	 * Test the value of the email form field to verify that it is a valid email address.
@@ -33,7 +38,7 @@ AB.validate = (function () {
 	tests.email = function(value, validate) {
 		var regx = /^(?:\w+\.?\+?)*\w+@(?:\w+\.)+\w+$/;
 		if (validate) {
-			return regx.test(value.trim());	
+			return regx.test(value.trim());
 		}
 	};
 	
@@ -91,6 +96,30 @@ AB.validate = (function () {
 		
 		if (validate) {
 			return regx.test(val);
+		}
+	};
+	
+	/**
+	 * Test the value to determine whether or not the string contains any characters at all.
+	 * 
+	 * @memberOf AB.validate
+	 * @param  {string} value The string to validate
+	 * @param  {boolean} validate Should we validate the string?
+	 * @return {boolean} Does the string contain any characters at all?
+	 * 
+	 */
+	tests.requireSelection = function(fields, validate) {
+		var elements;
+		
+		if (validate) {
+			
+			for (var i = 0; i < fields.length; i++) {
+				if (fields[i].checked) {
+					return true;
+				}
+			}
+			
+			return false;
 		}
 	};
 	
@@ -173,6 +202,8 @@ AB.validate = (function () {
 	function showErrorMessages(formSelector, errors) {
 		
 		var form = document.querySelector(formSelector),
+			formField,
+			previous,
 			message,
 			errorSpan;
 			
@@ -180,27 +211,44 @@ AB.validate = (function () {
 		for (var error in errors) {
 			
 			message = errors[error]; // The actual message from the "errors" object.
-			formField = form.elements[error]; // The specific form field to target.
+			formField = (form.elements[error].nodeType) ? form.elements[error] : form.elements[error][0]; // The specific form field to target. If the form field name is a collection, select the first one.
+			
+			// If there are any dupes, just go ahead and bypass those.
+			if (formField.name === previous) {
+				continue;
+			}
 			
 			// Add the error class to the input field.
-			formField.classList.add(errorClass);
+			formField.classList.add(options.fieldErrorClass);
 			
-			// IF there is already an error message being displayed for this form field...
-			// THEN don't add another one. Instead, just update the inner HTML.
-			if (formField.nextElementSibling.classList.contains(errorClass)) {
+			// IF the element has sibling elements AND...
+			// IF that element is an error message container...
+			// THEN update the innerHTML of that message container.
+			// OTHERWISE create a new element and add it as a sibling to the form field.
+			if (formField.nextElementSibling && formField.nextElementSibling.classList.contains(options.messageErrorClass)) {
 				
 				formField.nextElementSibling.innerHTML = message;
 				
 			} else {
 				
 				// IF there is NOT an existing error message for this input field...
-				// THEN create a new one and add it next to the form field.
+				// THEN create a new one and add it as a sibling (immediately next) to the form field.
 				errorSpan = document.createElement('span');
-				errorSpan.classList.add(errorClass);
+				errorSpan.classList.add(options.messageErrorClass);
 				errorSpan.innerHTML = message;
-				formField.parentNode.insertBefore(errorSpan, formField.nextElementSibling);
+				
+				// IF there aren't any sibling elements...
+				// THEN use appendChild to add the element...
+				// OTHERWISE add the element using insertBefore.
+				if (formField.nextElementSibling === null) {
+					formField.parentNode.appendChild(errorSpan);
+				} else {
+					formField.parentNode.insertBefore(errorSpan, formField.nextElementSibling);
+				}
 				
 			}
+			
+			previous = formField.name;
 		}
 	}
 	
@@ -220,9 +268,9 @@ AB.validate = (function () {
 		// remove the error messages from the fields that no longer need it.
 		for (var i = 0; i < elements.length; i++) {
 			
-			if (elements[i].classList.contains(errorClass)) {
+			if (elements[i].classList.contains(options.fieldErrorClass)) {
 				// Remove the error class from the form field.
-				elements[i].classList.remove(errorClass);
+				elements[i].classList.remove(options.fieldErrorClass);
 				// Remove the error message container for the form field.
 				elements[i].parentNode.removeChild(elements[i].nextElementSibling);
 			}
@@ -234,12 +282,21 @@ AB.validate = (function () {
 	 * Method to show error messages next to the form fields which did not pass validation.
 	 * 
 	 * @memberOf AB.validate
+	 * 
 	 * @param  {string} formSelector The css selector of the form to be validated.
-	 * @param  {object} options Configuration object to select which form fields need validation.
+	 * @param  {object} config Configuration object to select which form fields need validation.
+	 * @param  {object} config.fieldErrorClass The classname to use on the form field if validation fails.
+	 * @param  {object} config.messageErrorClass The classname to use on the error message container if validation fails.
+	 * @param  {object} config.field Object containing all of the form elements and rules for validation.
+	 * 
+	 * Please see the example code for clarity on config options.
+	 * 
 	 * @returns {boolean} Did any of the form fields pass validation?
 	 * 
 	 * @example
 	 * AB.validate('.js-registration-form', {
+	 *    fieldErrorClass : 'FormField-error',
+	 *    messageErrorClass : 'ErrorMessage',
 	 *    fields : {
 	 *        // Use the "name" of the form field to select a specific field for validation.
 	 *     	  'user-name' : {
@@ -285,22 +342,30 @@ AB.validate = (function () {
 	 * });
 	 * 
 	 */
-	function validateForm(formSelector, options) {
+	function validateForm(formSelector, config) {
 		
 		var i,
 			field, // Field
 			name, // Name of the form field.
 			value, // Value of the form field
 			rules, // List of rules
+			result, // Result of validation test
 			errors = {}, // Object which will contain all of the errors.
 			formFields = document.querySelector(formSelector).elements; // All of the elements for this form.
 			
+		// Shallow extend the config object.
+		for (var prop in config) {
+			if (config.hasOwnProperty(prop)) {
+				options[prop] = config[prop];
+			}
+		}
+		
 		// Loop through all of the form field elements within the form being passed in.
 		for (i = 0; i < formFields.length; i++ ) {
 			
 			field = formFields[i]; // The specific form field we've now looped to.
 			name = field.name; // The name of the form field used for matching with the configuration object.
-			value = field.value.trim(); // The value of the form field.
+			value = field.value.trim(); // The value of the form field. Trim the ends of the string but leave spaces intact.
 			rules = (typeof options.fields[name] !== 'undefined') ? options.fields[name].rules : ''; // The list of rules, if any.
 			
 			// Loop through all of the rules being specified
@@ -312,6 +377,16 @@ AB.validate = (function () {
 					throw new UserException('Sorry, ' + rule + ' does not exist as a validation test.');
 				}
 				
+				if (field.type === 'checkbox' || field.type === 'radio') {
+					
+					result = tests[rule](formFields[field.name], rules[rule]);
+					
+				} else {
+					
+					result = tests[rule](value, rules[rule]);
+					
+				}
+				
 				// Using the appropriate test, check to see if the validation passes.
 				// tests = list of methods which do the validation tests
 				// tests[rule] = the specific test based on what rule being test. E.g. rules: { [maxLength] : 20 }
@@ -319,7 +394,7 @@ AB.validate = (function () {
 				// rules[rule] = the value for this particular test set in the validator's configuration object. E.g. rules : { minLength: [7] }
 				// IF the test fails...
 				// THEN add the error message to the errors object.
-				if ( !tests[rule](value, rules[rule]) ) {
+				if ( !result ) {
 					
 					// IF specific messages are provided for individual tests...
 					if (typeof options.fields[name].messages !== 'undefined') {
@@ -351,7 +426,7 @@ AB.validate = (function () {
 			// Return true since validation passed.
 			return true;
 		}
-			
+		
 		// Show error messages on the form next to the form fields.
 		showErrorMessages(formSelector, errors);
 		// Return false since validation failed.
