@@ -19,7 +19,7 @@ var AB = (window.AB || {});
 AB.validate = (function () {
 	
 	var errorClass = 'error',
-		tests = {},
+		test = {},
 		options = {
 			fieldErrorClass : errorClass,
 			messageErrorClass : errorClass,
@@ -35,7 +35,7 @@ AB.validate = (function () {
 	 * @return {boolean} Is the email being provided a valid email address?
 	 * 
 	 */
-	tests.email = function(value, validate) {
+	test.email = function(value, validate) {
 		var regx = /^(?:\w+\.?\+?)*\w+@(?:\w+\.)+\w+$/;
 		if (validate) {
 			return regx.test(value.trim());
@@ -51,7 +51,7 @@ AB.validate = (function () {
 	 * @return {boolean} Does the string have at least the minimum number of characters?
 	 * 
 	 */
-	tests.minLength = function(value, length) {
+	test.minLength = function(value, length) {
 		return value.length >= length;
 	};
 	
@@ -64,7 +64,7 @@ AB.validate = (function () {
 	 * @return {boolean} Does the string have less than the maximum number of characters?
 	 * 
 	 */
-	tests.maxLength = function(value, length) {
+	test.maxLength = function(value, length) {
 		return value.length <= length;
 	};
 	
@@ -77,7 +77,7 @@ AB.validate = (function () {
 	 * @return {boolean} Do the two values match?
 	 * 
 	 */
-	tests.equals = function(first, second) {
+	test.equals = function(first, second) {
 		return (first == second);
 	};
 	
@@ -91,7 +91,7 @@ AB.validate = (function () {
 	 * 
 	 */
 	// TODO: Validate different date formats
-	tests.date = function (date, validate) {
+	test.date = function (date, validate) {
 		var regx = /^(?:0[1-9]|1[0-2])\/(?:0[1-9]|[12][0-9]|3[01])\/(?:\d{4})/;
 		
 		if (validate) {
@@ -108,7 +108,7 @@ AB.validate = (function () {
 	 * @return {boolean} Does the string contain any characters at all?
 	 * 
 	 */
-	tests.requireSelection = function(fields, validate) {
+	test.requireSelection = function(fields, validate) {
 		var elements;
 		
 		if (validate) {
@@ -132,7 +132,7 @@ AB.validate = (function () {
 	 * @return {boolean} Does the string contain at least one number?
 	 * 
 	 */
-	tests.requireNumbers = function(value, validate) {
+	test.requireNumbers = function(value, validate) {
 		var regx = /^(?=.*\d).+$/;
 		
 		if (validate) {
@@ -149,7 +149,7 @@ AB.validate = (function () {
 	 * @return {boolean} Does the string contain at least one uppercase letter?
 	 * 
 	 */
-	tests.requireUppercase = function(value, validate) {
+	test.requireUppercase = function(value, validate) {
 		var regx = /^(?=.*[A-Z]).+$/;
 		
 		if (validate) {
@@ -166,7 +166,7 @@ AB.validate = (function () {
 	 * @return {boolean} Does the string contain at least one lowercase letter?
 	 * 
 	 */
-	tests.requireLowercase = function(value, validate) {
+	test.requireLowercase = function(value, validate) {
 		var regx = /^(?=.*[a-z]).+$/;
 		
 		if (validate) {
@@ -183,7 +183,7 @@ AB.validate = (function () {
 	 * @return {boolean} Does the string contain at least one special character?
 	 * 
 	 */
-	tests.requireSymbols = function(value, validate) {
+	test.requireSymbols = function(value, validate) {
 		var regx = /^(?=.*[-+_!@#$%^&*.,?]).+$/;
 		
 		if (validate) {
