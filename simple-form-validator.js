@@ -1,11 +1,4 @@
 /**
- * @namespace AB
- * @author Aleks Blagojevich
- * 
- */
-var AB = (window.AB || {});
- 
-/**
  * Contains all of the functionality and methods for form validation.
  *
  * @author Aleks Blagojevich
@@ -17,6 +10,7 @@ var AB = (window.AB || {});
  * 
  */
 AB.validate = (function () {
+	'use strict';
 	
 	var errorClass = 'error',
 		test = {},
@@ -78,7 +72,7 @@ AB.validate = (function () {
 	 * 
 	 */
 	test.equals = function(first, second) {
-		return (first == second);
+		return (first === second);
 	};
 	
 	/**
@@ -95,7 +89,7 @@ AB.validate = (function () {
 		var regx = /^(?:0[1-9]|1[0-2])\/(?:0[1-9]|[12][0-9]|3[01])\/(?:\d{4})/;
 		
 		if (validate) {
-			return regx.test(val);
+			return regx.test(date);
 		}
 	};
 	
@@ -210,45 +204,48 @@ AB.validate = (function () {
 		// Loop through the "errors" object so we can show the error messages to the user.
 		for (var error in errors) {
 			
-			message = errors[error]; // The actual message from the "errors" object.
-			formField = (form.elements[error].nodeType) ? form.elements[error] : form.elements[error][0]; // The specific form field to target. If the form field name is a collection, select the first one.
+			if (errors.hasOwnProperty(error)) {
 			
-			// If there are any dupes, just go ahead and bypass those.
-			if (formField.name === previous) {
-				continue;
-			}
-			
-			// Add the error class to the input field.
-			formField.classList.add(options.fieldErrorClass);
-			
-			// IF the element has sibling elements AND...
-			// IF that element is an error message container...
-			// THEN update the innerHTML of that message container.
-			// OTHERWISE create a new element and add it as a sibling to the form field.
-			if (formField.nextElementSibling && formField.nextElementSibling.classList.contains(options.messageErrorClass)) {
+				message = errors[error]; // The actual message from the "errors" object.
+				formField = (form.elements[error].nodeType) ? form.elements[error] : form.elements[error][0]; // The specific form field to target. If the form field name is a collection, select the first one.
 				
-				formField.nextElementSibling.innerHTML = message;
-				
-			} else {
-				
-				// IF there is NOT an existing error message for this input field...
-				// THEN create a new one and add it as a sibling (immediately next) to the form field.
-				errorSpan = document.createElement('span');
-				errorSpan.classList.add(options.messageErrorClass);
-				errorSpan.innerHTML = message;
-				
-				// IF there aren't any sibling elements...
-				// THEN use appendChild to add the element...
-				// OTHERWISE add the element using insertBefore.
-				if (formField.nextElementSibling === null) {
-					formField.parentNode.appendChild(errorSpan);
-				} else {
-					formField.parentNode.insertBefore(errorSpan, formField.nextElementSibling);
+				// If there are any dupes, just go ahead and bypass those.
+				if (formField.name === previous) {
+					continue;
 				}
 				
+				// Add the error class to the input field.
+				formField.classList.add(options.fieldErrorClass);
+				
+				// IF the element has sibling elements AND...
+				// IF that element is an error message container...
+				// THEN update the innerHTML of that message container.
+				// OTHERWISE create a new element and add it as a sibling to the form field.
+				if (formField.nextElementSibling && formField.nextElementSibling.classList.contains(options.messageErrorClass)) {
+					
+					formField.nextElementSibling.innerHTML = message;
+					
+				} else {
+					
+					// IF there is NOT an existing error message for this input field...
+					// THEN create a new one and add it as a sibling (immediately next) to the form field.
+					errorSpan = document.createElement('span');
+					errorSpan.classList.add(options.messageErrorClass);
+					errorSpan.innerHTML = message;
+					
+					// IF there aren't any sibling elements...
+					// THEN use appendChild to add the element...
+					// OTHERWISE add the element using insertBefore.
+					if (formField.nextElementSibling === null) {
+						formField.parentNode.appendChild(errorSpan);
+					} else {
+						formField.parentNode.insertBefore(errorSpan, formField.nextElementSibling);
+					}
+					
+				}
+				
+				previous = formField.name;
 			}
-			
-			previous = formField.name;
 		}
 	}
 	
@@ -372,29 +369,35 @@ AB.validate = (function () {
 			// for this particular test and execute them.
 			for (var rule in rules) {
 				
-				// If there is a rule being invoked that is not available, throw an error.
-				if (typeof tests[rule] !== 'function') {
-					throw new UserException('Sorry, ' + rule + ' does not exist as a validation test.');
-				}
-				
-				if (field.type === 'checkbox' || field.type === 'radio') {
+				if (rules.hasOwnProperty(rule)) {
+					// If there is a rule being invoked that is not available, throw an error.
+					if (typeof test[rule] !== 'function') {
+						throw new Error('Sorry, ' + rule + ' does not exist as a validation test.');
+					}
 					
-					result = tests[rule](formFields[field.name], rules[rule]);
+					if (field.type === 'checkbox' || field.type === 'radio') {
+						
+						result = test[rule](formFields[field.name], rules[rule]);
+						
+					} else {
+						
+						result = test[rule](value, rules[rule]);
+						
+					}
 					
-				} else {
-					
-					result = tests[rule](value, rules[rule]);
-					
-				}
-				
-				// Using the appropriate test, check to see if the validation passes.
-				// tests = list of methods which do the validation tests
-				// tests[rule] = the specific test based on what rule being test. E.g. rules: { [maxLength] : 20 }
-				// value = the value of the field we're validating
-				// rules[rule] = the value for this particular test set in the validator's configuration object. E.g. rules : { minLength: [7] }
-				// IF the test fails...
-				// THEN add the error message to the errors object.
-				if ( !result ) {
+					// Using the appropriate test, check to see if the validation passes.
+					// 
+					// test = list of methods which do the validation tests
+					// test[rule] = the specific test based on what rule being test. E.g. rules: { [maxLength] : 20 }
+					// value = the value of the field we're validating
+					// rules[rule] = the value for this particular test set in the validator's configuration object. E.g. rules : { minLength: [7] }
+					// 
+					// IF the test passes...
+					// THEN move on to the next item.
+					// OTHERWISE add the error message to the errors object.
+					if ( result ) {
+						continue;
+					}
 					
 					// IF specific messages are provided for individual tests...
 					if (typeof options.fields[name].messages !== 'undefined') {
@@ -409,9 +412,8 @@ AB.validate = (function () {
 						
 					} else {
 						// The default error message in case one wasn't provided.
-						errors[name] = 'Please verify your entry.'
+						errors[name] = 'Please verify your entry.';
 					}
-					
 				}
 			}
 		}
