@@ -370,23 +370,19 @@ AB.validate = (function () {
 			for (var rule in rules) {
 				
 				if (rules.hasOwnProperty(rule)) {
+					
 					// If there is a rule being invoked that is not available, throw an error.
 					if (typeof test[rule] !== 'function') {
 						throw new Error('Sorry, ' + rule + ' does not exist as a validation test.');
 					}
 					
+					// Using the appropriate test, check to see if the validation passes.
 					if (field.type === 'checkbox' || field.type === 'radio') {
-						
 						result = test[rule](formFields[field.name], rules[rule]);
-						
 					} else {
-						
 						result = test[rule](value, rules[rule]);
-						
 					}
 					
-					// Using the appropriate test, check to see if the validation passes.
-					// 
 					// test = list of methods which do the validation tests
 					// test[rule] = the specific test based on what rule being test. E.g. rules: { [maxLength] : 20 }
 					// value = the value of the field we're validating
@@ -395,7 +391,7 @@ AB.validate = (function () {
 					// IF the test passes...
 					// THEN move on to the next item.
 					// OTHERWISE add the error message to the errors object.
-					if ( result ) {
+					if (result) {
 						continue;
 					}
 					
