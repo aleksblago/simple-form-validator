@@ -54,6 +54,8 @@ var options = {
 // Validate a basic text field.
 var options = {
 	// List of form fields
+	fieldErrorClass : 'FormField-error',
+	messageErrorClass : 'ErrorMessage',
 	fields : {
     	// Specify the form field to validate using the "name" attribute of that field.
 		'user-name' : {
@@ -87,6 +89,12 @@ var options = {
 				requireUppercase : 'Password must contain at least one uppercase letter.',
 				requireLowercase : 'Password must contain at least one lowercase letter.'
 			}
+		},
+		'user-agreement' : {
+			rules : {
+				requireSelection : true
+			},
+			message : 'You must accept our terms and conditions to sign up.'
 		}
 	}
 };
